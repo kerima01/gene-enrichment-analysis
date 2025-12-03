@@ -14,7 +14,8 @@ L’objectif est de caractériser chaque ensemble et de comprendre leurs rôles 
 #### 1.1 GOTerm
 Les gènes de l’ensemble sont fortement enrichis pour des fonctions liées à la **traduction** : cytoplasmic translation, structural constituent of ribosome, rRNA binding et translation, avec des p-values très faibles. La majorité des gènes codent pour des protéines ribosomales et des facteurs de traduction, avec des processus secondaires liés à l’assemblage des sous-unités ribosomales.  
 
-**Figure 7** : Enrichissements des termes GO pour l’ensemble `set.M2.14.txt`
+![Texte alternatif](enrichement_GO.png)
+**Figure 7** : Enrichissements des termes GO 
 
 #### 1.2 InterPro
 Enrichissement marqué pour la **voie de translocation Twin-arginine**, les domaines **molybdopterin oxidoreductase** et les sous-unités **[NiFe]-hydrogenase**. Les protéines ribosomales sont également sur-représentées, soulignant la combinaison traductionnelle et métabolique spécialisée, notamment la respiration anaérobie.  
