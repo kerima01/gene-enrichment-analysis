@@ -2,7 +2,7 @@
 
 ## Contexte
 
-L’analyse s’appuie sur une base de données intégrée construite sous Neo4j, regroupant des annotations fonctionnelles (GO, InterPro), des pathways, des unités transcriptionnelles, des mots-clés UniProt, des références PubMed et des interactions protéine-protéine. Ces données organisées sous forme de graphe permettent d’interroger efficacement les relations entre gènes et catégories biologiques. Un script d’enrichissement a été étendu afin d’évaluer plusieurs mesures statistiques (hypergéométrique, χ², coverage) et d’identifier celle offrant les résultats les plus pertinents pour caractériser les ensembles de gènes étudiés.
+L’analyse s’appuie sur une base de données intégrée construite sous Neo4j, regroupant des annotations fonctionnelles (GO, InterPro), des pathways, des unités transcriptionnelles, des mots-clés UniProt, des références PubMed et des interactions protéine-protéine. Ces données organisées sous forme de graphe permettent d’interroger efficacement les relations entre gènes et catégories biologiques. Un script d’enrichissement a été étendu afin d’évaluer plusieurs mesures statistiques (hypergéométrique, binomiale, χ², coverage) et d’identifier celle offrant les résultats les plus pertinents pour caractériser les ensembles de gènes étudiés.
 
 ##  Présentation du projet
 
@@ -99,3 +99,10 @@ Les publications enrichies portent sur la **division cellulaire bactérienne**, 
 - **`set.02.txt`** : profil division cellulaire + biosynthèse peptidoglycane.  
 
 Ces deux ensembles illustrent comment les analyses fonctionnelles permettent de découvrir des modules biologiques cohérents et de relier les gènes à des fonctions et voies spécifiques dans le génome bactérien.
+
+## **Auteurs** 
+**Hawa BALDE**  
+**Issa KERIMA-KHALIL**
+
+Master Bioinformatique et Biologie des Systèmes  
+Université Toulouse Paul Sabatier 2025-2026
