@@ -1,5 +1,9 @@
 # Analyse d’Enrichissement Fonctionnel
 
+## Contexte
+
+L’analyse s’appuie sur une base de données intégrée construite sous Neo4j, regroupant des annotations fonctionnelles (GO, InterPro), des pathways, des unités transcriptionnelles, des mots-clés UniProt, des références PubMed et des interactions protéine-protéine. Ces données organisées sous forme de graphe permettent d’interroger efficacement les relations entre gènes et catégories biologiques. Un script d’enrichissement a été étendu afin d’évaluer plusieurs mesures statistiques et d’identifier celle offrant les résultats les plus pertinents pour caractériser les ensembles de gènes étudiés.
+
 ##  Présentation du projet
 
 Ce projet consiste en une analyse d’enrichissement fonctionnel de deux ensembles de gènes bactériens (`set.M2.14.txt` et `set.02.txt`) afin d’identifier les fonctions biologiques, motifs protéiques, mots-clés, voies métaboliques et unités transcriptionnelles surreprésentés.  
