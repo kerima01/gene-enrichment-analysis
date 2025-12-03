@@ -144,4 +144,50 @@ print(pp5)
 # Sauvegarde en PNG
 ggsave("Enrichement_TU.png", plot = pp5, width = 8, height = 6, dpi = 300)
 ```
+```{r}
+library(ggplot2)
+library(dplyr)
 
+# Charger le fichier
+PubMed <- read.table("result_PubMed.tsv", header=TRUE, sep="\t", stringsAsFactors=FALSE)
+
+# Dictionnaire: PMID -> "PMID – Titre court"
+titles <- c(
+  "12626683" = "12626683 – Cytokinesis in bacteria",
+  "11401685" = "11401685 – Regulation of the E. coli cell cycle",
+  "12914007" = "12914007 – Bacterial cell shape",
+  "15491352" = "15491352 – Septal ring in bacterial division",
+  "15752189" = "15752189 – Two-step maturation of the divisome",
+  "16824093" = "16824093 – Hierarchy of divisome interactions",
+  "16824090" = "16824090 – Assembly order of E. coli division proteins",
+  "9294438"  = "9294438 – Promoter of the mra division cluster",
+  "9614967"  = "9614967 – Regulation of dcw division genes",
+  "9721276"  = "9721276 – Expression of the mra division cluster"
+)
+
+# Top 10 PubMed
+top_Pubmed <- PubMed %>%
+  arrange(p.adjust) %>%
+  head(10) %>%
+  mutate(
+    title = titles[as.character(id)],            # on map le PMID au titre
+    title = factor(title, levels = rev(title))   # ordre pour le plot
+  )
+
+# Barplot
+pp5 <- ggplot(top_Pubmed, aes(x = title, y = -log10(p.adjust))) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  theme_classic() +
+  labs(
+    title = "Top PubMed enrichies",
+    x = "Article (PMID – Titre)",
+    y = "-log10(p-adjust)"
+  )
+
+print(pp5)
+
+# Sauvegarde en PNG
+ggsave("Enrichement_2_PubMed.png", plot = pp5, width = 14, height = 8, dpi = 300)
+
+```
