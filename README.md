@@ -2,7 +2,7 @@
 
 ## Contexte
 
-L’analyse s’appuie sur une base de données intégrée construite sous Neo4j, regroupant des annotations fonctionnelles (GO, InterPro), des pathways, des unités transcriptionnelles, des mots-clés UniProt, des références PubMed et des interactions protéine-protéine. Ces données organisées sous forme de graphe permettent d’interroger efficacement les relations entre gènes et catégories biologiques. Un script d’enrichissement a été étendu afin d’évaluer plusieurs mesures statistiques et d’identifier celle offrant les résultats les plus pertinents pour caractériser les ensembles de gènes étudiés.
+L’analyse s’appuie sur une base de données intégrée construite sous Neo4j, regroupant des annotations fonctionnelles (GO, InterPro), des pathways, des unités transcriptionnelles, des mots-clés UniProt, des références PubMed et des interactions protéine-protéine. Ces données organisées sous forme de graphe permettent d’interroger efficacement les relations entre gènes et catégories biologiques. Un script d’enrichissement a été étendu afin d’évaluer plusieurs mesures statistiques (hypergéométrique, χ², coverage) et d’identifier celle offrant les résultats les plus pertinents pour caractériser les ensembles de gènes étudiés.
 
 ##  Présentation du projet
 
@@ -10,6 +10,11 @@ Ce projet consiste en une analyse d’enrichissement fonctionnel de deux ensembl
 L’objectif est de caractériser chaque ensemble et de comprendre leurs rôles biologiques spécifiques.
 
 ---
+# Comparaison des mesures intégrées
+
+Plusieurs mesures (hypergéométrique, binomiale, χ² et coverage) ont été comparées afin d’évaluer leur capacité à détecter correctement les catégories enrichies. Les tests ont montré que la mesure hypergéométrique est celle qui fournit les résultats les plus stables et les plus cohérents, même dans des scénarios difficiles. Elle correspond également à la méthode classiquement utilisée en biologie pour les analyses d’enrichissement.
+La mesure binomiale donne des performances proches et peut servir d’alternative simple ou de validation complémentaire. En revanche, les approches χ² et coverage se sont révélées moins adaptées en raison d’une variabilité plus importante ou d’une sensibilité excessive au bruit.
+Nous retenons donc l’hypergéométrique comme mesure principale pour l’analyse fonctionnelle.
 
 # Analyse de l’ensemble de gènes fourni
 
