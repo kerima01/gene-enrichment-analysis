@@ -16,6 +16,9 @@ Plusieurs mesures (hypergéométrique, binomiale, χ² et coverage) ont été co
 La mesure binomiale donne des performances proches et peut servir d’alternative simple ou de validation complémentaire. En revanche, les approches χ² et coverage se sont révélées moins adaptées en raison d’une variabilité plus importante ou d’une sensibilité excessive au bruit.
 Nous retenons donc l’hypergéométrique comme mesure principale pour l’analyse fonctionnelle.
 
+![comparaison_mesures](comparaison_mesures.png)
+**Figure 6** : Comparaison des mesures intégrées
+
 # Analyse de l’ensemble de gènes fourni
 
 ### A. Ensemble `set.M2.14.txt`
