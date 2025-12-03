@@ -1,5 +1,6 @@
 ---
 title: "R Notebook"
+author: "Issa kerima"
 output: html_notebook
 ---
 
