@@ -50,31 +50,31 @@ Plusieurs TU regroupent des gènes ribosomaux (TU00337, TU00347), tandis que d�
 #### 1.1 GOTerm
 Les termes GO les plus enrichis sont **cell division**, **regulation of cell shape**, **peptidoglycan biosynthetic process**, indiquant une sur-représentation des gènes participant à la division cellulaire et à la construction de la paroi bactérienne.  
 
-![Enrichement_GO](Enrichement_2_GO.png)
+![Enrichement_GO](set.02/Enrichement_2_GO.png)
 **Figure 12** : Enrichissements GO Terms de `set.02.txt`
 
 #### 1.2 InterPro
 Les domaines InterPro enrichis appartiennent aux **transpeptidases**, **L,D-transpeptidases** et **Mur ligases**, caractéristiques de la biosynthèse et du remodelage du peptidoglycane. Les **penicillin-binding proteins (PBPs)** sont également représentées.  
 
-![Enrichement_InterPro](Enrichement_2_InterPro.png)
+![Enrichement_InterPro](set.02/Enrichement_2_InterPro.png)
 **Figure 13** : Enrichissements InterPro de `set.02.txt`
 
 #### 1.3 Keyword
 Les mots-clés enrichis confirment la forte implication dans la **division cellulaire** et la **morphologie bactérienne**, avec des termes liés à la synthèse et au remodelage du peptidoglycane.  
 
-![Enrichement_Keyword](Enrichement_2_Keyword.png)
+![Enrichement_Keyword](set.02/Enrichement_2_Keyword.png)
 **Figure 14** : Enrichissements Keyword de `set.02.txt`
 
 #### 1.4 Pathway
 Les voies enrichies concernent exclusivement la **biosynthèse et la maturation du peptidoglycane**, notamment la voie meso-diaminopimelate contenant, typique des bactéries Gram-négatives.  
 
-![Enrichement_Pathway](Enrichement_2_Pathway.png)
+![Enrichement_Pathway](set.02/Enrichement_2_Pathway.png)
 **Figure 14** : Enrichissements Pathway de `set.02.txt`
 
 #### 1.5 PubMed
 Les publications enrichies portent sur la **division cellulaire bactérienne**, la **cytokinèse**, la formation du divisome, et la régulation transcriptionnelle des opérons **dcw** et **mra**.  
 
-![Enrichement_PubMed](Enrichement_2_PubMed.png)
+![Enrichement_PubMed](set.02/Enrichement_2_PubMed.png)
 **Figure 15** : Enrichissements PubMed de `set.02.txt`
 
 **Discussion :** L’ensemble `set.02.txt` présente une signature centrée sur la **division cellulaire**, le **divisome**, et la **synthèse du peptidoglycane**. Les analyses convergent vers un module génétique cohérent impliqué dans le maintien de la morphologie et la coordination entre division cellulaire et biosynthèse de la paroi.
