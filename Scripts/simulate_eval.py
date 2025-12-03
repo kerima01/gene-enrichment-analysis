@@ -219,7 +219,7 @@ summary = (
 summary.to_csv("tmp2/summary.tsv", sep="\t", index=False)
 
 elapsed_total = time.time() - start_time
-print("\n>>> Résultats enregistrés : summary.tsv (résumé) et results_all.csv (détaillé)")
+print("\n Résultats enregistrés : summary.tsv (résumé) et results_all.csv (détaillé)")
 print(f"Temps total : {elapsed_total:.1f}s")
 print(c_common)
 print(summary)
