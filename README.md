@@ -71,7 +71,7 @@ Les publications enrichies portent sur la **division cellulaire bactérienne**, 
 
 ---
 
-## 🔗 Conclusion générale
+##  Conclusion générale
 
 - **`set.M2.14.txt`** : profil traductionnel + métabolisme anaérobie.  
 - **`set.02.txt`** : profil division cellulaire + biosynthèse peptidoglycane.  
