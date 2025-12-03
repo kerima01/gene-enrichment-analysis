@@ -1,0 +1,1401 @@
+---
+title: "TP1_GDNS"
+author: "Issa kerima"
+date: "2025-10-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+install.packages("neo2R")
+```
+```{r}
+library(reticulate)
+```
+
+```{r}
+pbinom(23, 179, 29/4139, lower.tail = F)
+```
+
+```{r}
+library(tidyverse)
+```
+```{r}
+uniprot <- read_tsv("~/Téléchargements/GDNS/downloads/uniprotkb_proteome_UP000000625_2025_10_06.tsv.gz", show_col_types = F)
+uniprot %>% head
+```
+
+```{r}
+mapping <- uniprot %>% 
+  select(Entry, names = `Gene Names (ordered locus)`) %>%
+  mutate(bnumber=str_extract(names, 'b\\d+')) %>%
+  select(bnumber, uniprotID=Entry) %>%
+  filter(!is.na(bnumber)) %>% # 2023 → P0DQD7 and P0A6D5 are lost (no bnumber)
+  arrange(bnumber)
+bnumber.uniprot <- mapping
+mapping %>% head
+```
+```{r}
+keywords <- uniprot %>% 
+  select(uniprotID=Entry, keyword=Keywords) %>%
+  right_join(mapping, by="uniprotID") %>% # right join to remove those without bnumber
+  separate_rows(keyword, sep=';') %>%
+  select(bnumber, keyword) %>%
+  arrange(bnumber)
+keywords %>% head
+```
+```{r}
+ref_sets <- keywords %>% 
+  group_by(keyword) %>%
+  summarise(count=n(), elements = list(bnumber)) %>%
+  ungroup %>%
+  filter(count>1)  %>%
+  select(id=keyword, desc=count, elements)
+ref_sets
+```
+```{r}
+library(jsonlite)
+```
+
+```{r}
+ref_sets %>% 
+  toJSON %>% 
+  write("reference.sets/uniprot.keywords.sets.json")
+```
+
+```{r}
+#jq . "reference.sets/uniprot.keywords.sets.json" | head -40
+```
+```{r}
+#binom.cdf((181-102),181,(4400-105)/4400)
+```
+
+```{r}
+interpro <- uniprot %>% 
+  select(uniprotID = Entry, interpro = InterPro) %>%
+  right_join(mapping, by = "uniprotID") %>% 
+  separate_rows(interpro, sep=';') %>%
+  mutate(interpro = str_trim(interpro)) %>%
+  filter(interpro != "") %>%
+  select(bnumber, interpro) %>%
+  arrange(bnumber)
+
+interpro %>% head
+```
+```{r}
+ref_sets_interpro <- interpro %>% 
+  group_by(interpro) %>%
+  summarise(count=n(), elements = list(bnumber)) %>%
+  ungroup %>%
+  filter(count>1)  %>%
+  select(id=interpro, desc=count, elements)
+ref_sets_interpro
+```
+```{r}
+ref_sets_interpro %>% filter(id == "" | is.na(id))
+```
+```{r}
+ref_sets_interpro <- ref_sets_interpro %>% 
+  filter(!is.na(id) & id != "")
+ref_sets_interpro %>% filter(id == "" | is.na(id))
+```
+
+
+```{r}
+ref_sets_interpro %>% 
+  toJSON %>% 
+  write("reference.sets/interpro.domains.sets.json")
+```
+
+```{r}
+go_terms <- uniprot %>%
+  select(uniprotID = Entry, go = `Gene Ontology IDs`) %>%
+  right_join(mapping, by = "uniprotID") %>%
+  separate_rows(go, sep = ";") %>%
+  select(bnumber, go) %>%
+  arrange(bnumber)
+go_terms %>% head
+```
+
+```{r}
+ref_sets_go <- go_terms %>%
+  group_by(go) %>%
+  summarise(count = n(), elements = list(bnumber)) %>%
+  ungroup() %>%
+  filter(count > 1) %>%
+  select(id = go, desc = count, elements)
+```
+
+```{r}
+ref_sets_go %>% head
+```
+
+```{r}
+ref_sets_go %>% filter(id == "" | is.na(id))
+```
+
+```{r}
+ref_sets_go <- ref_sets_go %>% 
+  filter(!is.na(id) & id != "")
+ref_sets_go %>% filter(id == "" | is.na(id))
+```
+
+```{r}
+ref_sets_go %>%
+  toJSON() %>%
+  write("reference.sets/uniprot.goterms.sets.json")
+```
+
+```{r}
+gene_pour_mapping <-read_tsv("~/Téléchargements/GDNS/downloads/All-instances-of-Genes-in-Escherichia-coli-K-12-substr.-MG1655.txt", show_col_types = FALSE)
+```
+
+```{r}
+gene_mapping_clean <- gene_pour_mapping %>%
+  mutate(bnumber = str_extract(Names, "b\\d+")) %>%
+  filter(!is.na(bnumber)) %>%
+  select(GeneID = Genes, bnumber)
+```
+
+
+```{r}
+tu <- read_tsv("~/Téléchargements/GDNS/downloads/all-transcription-units.txt", show_col_types = FALSE)
+```
+
+
+```{r}
+tu_clean <- tu %>%
+  separate_rows(`Genes of transcription unit`, sep = "//") %>%
+  mutate(gene = str_trim(`Genes of transcription unit`)) %>%
+  select(TU = `Object ID`, gene)
+
+tu_mapped <- tu_clean %>%
+  left_join(gene_mapping_clean, by = c("gene" = "GeneID")) %>%
+  filter(!is.na(bnumber))
+
+ref_sets_tu <- tu_mapped %>%
+  group_by(TU) %>%
+  summarise(
+    desc = n(),
+    elements = list(bnumber)
+  ) %>%
+  ungroup() %>%
+  rename(id = TU) %>%
+  filter(desc > 1)
+```
+
+
+```{r}
+ref_sets_tu %>% filter(is.na(id) | id == "")
+```
+
+
+```{r}
+ref_sets_tu %>%
+  toJSON %>%
+  write("reference.sets/tu.sets.json")
+```
+
+```{r}
+tu_info <- tu %>%
+  select(
+    id = `Object ID`,
+    name = Site,
+    strand = Strand,
+    begin = Left,
+    end = Right
+  ) %>%
+  distinct()
+
+write_csv(tu_info, "neo4j.import/tu.info.csv")
+
+```
+
+
+```{r}
+pathways <- read_tsv("downloads/All-instances-of-Pathways-in-Escherichia-coli-K-12-substr.-MG1655.txt", show_col_types = FALSE)
+```
+
+```{r}
+pathway_clean <- pathways %>%
+  separate_rows(`Genes of pathway`, sep = "//") %>%
+  mutate(gene = str_trim(`Genes of pathway`)) %>%
+  select(Pathway = `Object ID`, gene)
+```
+
+```{r}
+pathway_mapped <- pathway_clean %>%
+  left_join(gene_mapping_clean, by = c("gene" = "GeneID")) %>%
+  filter(!is.na(bnumber))
+```
+
+```{r}
+ref_sets_pathway <- pathway_mapped %>%
+  group_by(Pathway) %>%
+  summarise(
+    desc = n(),
+    elements = list(bnumber)
+  ) %>%
+  ungroup() %>%
+  rename(id = Pathway) %>%
+  filter(desc > 1)
+```
+
+```{r}
+ref_sets_pathway%>% filter(is.na(id) | id == "")
+```
+
+
+```{r}
+ref_sets_pathway <- ref_sets_pathway %>%
+  filter(!is.na(id) & id != "")
+```
+
+```{r}
+ref_sets_pathway %>%
+  toJSON %>%
+  write("reference.sets/pathway.sets.json")
+```
+
+```{r}
+aliases <- read.delim("downloads/All-instances-of-Genes-in-Escherichia-coli-K-12-substr.-MG1655.txt")
+
+# 1) Extraction propre des alias
+alias_long <- aliases %>%
+  select(Object.ID, Names) %>%
+  separate_rows(Names, sep = "//") %>%
+  mutate(
+    alias = str_trim(Names),
+    dbsource = "RegulonDB",
+    organism = 511145
+  ) %>%
+  filter(alias != "")
+
+# 2) Extraction séparée des bnumbers pour chaque Object.ID
+bnumbers <- alias_long %>%
+  filter(str_detect(alias, "^b\\d+$")) %>%
+  group_by(Object.ID) %>%
+  summarise(bnumber = list(alias), .groups = "drop")
+
+# 3) Associer chaque alias à tous les bnumbers de son Object.ID
+alias_clean <- alias_long %>%
+  filter(!str_detect(alias, "^b\\d+$")) %>%
+  left_join(bnumbers, by = "Object.ID") %>%
+  filter(!is.na(bnumber)) %>%   
+  unnest(bnumber) %>%
+  select(id = alias, bnumber, dbsource, organism)
+
+#write_csv(alias_clean, "neo4j.import/aliases.csv")
+```
+
+```{r}
+alias_clean %>%
+  select(id, dbsource, organism) %>%
+  distinct() %>%
+  write_csv("neo4j.import/alias.nodes.csv")
+```
+
+```{r}
+alias_clean %>%
+  select(id, bnumber) %>%
+  write_csv("neo4j.import/alias.bnum.csv")
+```
+
+
+```{r}
+if (!require('neo2R')) { # client neo4j 
+  install.packages('neo2R')
+}
+```
+
+
+```{r}
+library(neo2R)
+neodb <- startGraph(
+  "http://localhost:7474",
+  check = FALSE,
+  username = "neo4j", 
+  password = "omybioinfo",
+  importPath = paste0(getwd(), "/neo4j.import"),
+  .opts = list(ssl_verifypeer=0)
+)
+cq = function(query, neo4j=neodb, ...) cypher(neo4j, query, arraysAsStrings = F, ...)
+```
+
+```{r}
+'MATCH ()-[r]-() DELETE(r)' %>% cq
+'MATCH ()-[r]-() RETURN count(r)' %>% cq %>% unlist
+'MATCH (n) DELETE(n)' %>% cq
+'MATCH (n) RETURN count(n)' %>% cq %>% unlist
+```
+
+```{r}
+# IMPORT
+"
+LOAD CSV WITH HEADERS FROM 'file:///ncbi.bnumber.location.tsv' AS row FIELDTERMINATOR '\t' 
+CREATE (n:Gene)
+SET n = row,
+ n.id = row.bnumber,
+ n.organism = toInteger('511145'),
+ n.rank = toInteger(row.rank),
+ n.strand = row.strand,
+ n.begin = toInteger(row.begin),
+ n.end = toInteger(row.end)
+"  %>% cq
+```
+
+```{r}
+'MATCH (n:Gene) RETURN count(n)' %>% cq %>% unlist
+```
+
+```{r}
+"MATCH (n:Gene) RETURN n LIMIT 2" %>% cq %>% .$n
+```
+```{r}
+cq2tb <- function(res) res$n %>% simplify2array %>% t 
+
+"MATCH (n:Gene) RETURN n LIMIT 2" %>% cq %>% cq2tb
+```
+
+```{r}
+'CREATE INDEX node_gene_id FOR (n:Gene) ON (n.id)' %>% cq
+```
+
+```{r}
+keywords %>% 
+  select(keyword) %>%
+  unique %>%
+  write_csv("neo4j.import/uniprot.keywords.csv")
+'LOAD CSV WITH HEADERS FROM "file:///uniprot.keywords.csv" AS row 
+CREATE (:Keyword {
+    id: row.keyword,
+    name: row.keyword
+})
+'  %>% cq
+'CREATE INDEX node_keyword_id FOR (n:Keyword) ON (n.id)' %>% cq
+```
+
+```{r}
+'MATCH (n:Keyword) RETURN count(n)' %>% cq %>% unlist
+```
+
+```{r}
+keywords %>% write_csv("neo4j.import/uniprot.keywords.genes.csv")
+```
+
+```{r}
+"MATCH (:Keyword)-[r:describes]->(:Gene) DELETE r" %>% cq
+"
+LOAD CSV WITH HEADERS FROM 'file:///uniprot.keywords.genes.csv' AS line 
+MATCH (k:Keyword),(g:Gene) 
+WHERE k.id=line.keyword AND g.id=line.bnumber
+WITH k,g 
+MERGE (k)-[:describes]->(g)
+" %>% cq
+```
+
+```{r}
+"MATCH (:Keyword)-[r:describes]->(:Gene) RETURN count(r)" %>% cq %>% unlist
+```
+
+```{r}
+pmids <- read_tsv("generated.data/bnumber.PMID.tsv", col_types = "cc")
+pmids %>% 
+  select(PMID) %>% 
+  unique %>% 
+  write_csv("neo4j.import/ncbi.pmid.csv")
+pmids %>% 
+  rename(gene_id = bnumber) %>% 
+  write_csv("neo4j.import/ncbi.pmid.genes.csv")
+```
+
+
+```{r}
+"MATCH (:PubMed)-[r:cites]->(:Gene) DELETE r" %>% cq
+'MATCH (n:PubMed) DELETE n' %>% cq
+'LOAD CSV WITH HEADERS FROM "file:///ncbi.pmid.csv" AS row
+CREATE (:PubMed {
+    id: row.PMID,
+    name: "https://pubmed.ncbi.nlm.nih.gov/"+row.PMID
+})
+'  %>% cq
+'CREATE INDEX node_pubmed_id FOR (n:PubMed) ON (n.id)' %>% cq
+```
+
+
+```{r}
+'MATCH (n:PubMed) RETURN count(n)' %>% cq %>% unlist
+```
+
+```{r}
+"MATCH (:PubMed)-[r:cites]->(:Gene) DELETE r" %>% cq
+"
+LOAD CSV WITH HEADERS FROM 'file:///ncbi.pmid.genes.csv' AS line 
+MATCH (p:PubMed),(g:Gene) 
+WHERE p.id=line.PMID AND g.id=line.gene_id
+WITH p,g 
+MERGE (p)-[:cites]->(g)
+" %>% cq
+```
+
+```{r}
+"MATCH (:PubMed)-[r:cites]->(:Gene) RETURN count(r)" %>% cq %>% unlist
+```
+
+```{r}
+ipr=read_tsv("downloads/entry.list.tsv", show_col_types = FALSE)
+```
+
+```{r}
+ipr_prop <- ipr %>%
+  rename(InterPro = `ENTRY_AC`, description = `ENTRY_NAME`) %>%
+  select(InterPro, description)
+
+interpro_full <- interpro %>%
+  rename(InterPro = interpro) %>% 
+  left_join(ipr_prop, by = "InterPro")
+
+head(interpro_full)
+
+```
+```{r}
+interpro_nodes <- interpro_full %>%
+  select(InterPro, description) %>%
+  distinct()
+
+write_csv(interpro_nodes, "neo4j.import/interpro.csv")
+
+```
+
+
+```{r}
+interpro_liens <- interpro_full %>%
+  select(InterPro, bnumber) %>%
+  distinct()
+
+write_csv(interpro_liens, "neo4j.import/interpro.bnum.csv")
+
+```
+
+```{r}
+'LOAD CSV WITH HEADERS FROM "file:///interpro.csv" AS row 
+CREATE (n:InterPro {
+    id: row.InterPro,
+    name: row.description
+})
+' %>% cq
+```
+
+```{r}
+'CREATE INDEX node_interpro_id FOR (n:InterPro) ON (n.id)' %>% cq
+```
+
+```{r}
+'MATCH (n:InterPro) RETURN count(n)' %>% cq %>% unlist
+```
+
+```{r}
+"MATCH (:InterPro)-[r:harbored_by]->(:Gene) DELETE r" %>% cq
+```
+
+```{r}
+'
+LOAD CSV WITH HEADERS FROM "file:///interpro.bnum.csv" AS line
+MATCH (i:InterPro), (g:Gene)
+WHERE i.id = line.InterPro AND g.id = line.bnumber
+WITH i, g
+MERGE (i)-[:encoded_in]->(g)
+' %>% cq
+```
+
+
+```{r}
+"MATCH (n:InterPro)-[r:encoded_in]->(:Gene) RETURN count(r)" %>% cq %>% unlist
+```
+
+```{r}
+pathways_clean <-pathways %>%
+  separate_rows(`Genes of pathway`, sep = "//") %>%
+  mutate(gene = str_trim(`Genes of pathway`)) %>%
+  select(PathwayID = `Object ID`, PathwayName = `Common-Name`, gene) %>%
+  filter(!is.na(gene) & gene != "")
+```
+
+
+```{r}
+pathway_nodes <- pathways_clean %>%
+  select(PathwayID, PathwayName) %>%
+  distinct() %>%
+  rename(id = PathwayID, name = PathwayName)
+
+write_csv(pathway_nodes, "neo4j.import/pathways.csv")
+```
+
+```{r}
+pathway_links <- pathway_mapped
+```
+```{r}
+pathway_liens <- pathway_links %>%
+  filter(!is.na(bnumber) & bnumber != "") %>%
+  select(PathwayID = Pathway, bnumber) %>%
+  distinct()
+
+write_csv(pathway_liens, "neo4j.import/pathways.bnum.csv")
+```
+
+
+```{r}
+"
+LOAD CSV WITH HEADERS FROM 'file:///pathways.csv' AS row
+CREATE (:Pathway {
+    id: row.id,
+    name: row.name,
+    organism: toInteger('511145')
+})
+" %>% cq
+
+'CREATE INDEX node_pathway_id FOR (n:Pathway) ON (n.id)' %>% cq
+'MATCH (n:Pathway) RETURN count(n)' %>% cq %>% unlist
+
+```
+```{r}
+"MATCH (:Pathway)-[r:requires]->(:Gene) DELETE r" %>% cq
+```
+
+
+```{r}
+"
+LOAD CSV WITH HEADERS FROM 'file:///pathways.bnum.csv' AS line
+MATCH (p:Pathway),(g:Gene)
+WHERE p.id=line.PathwayID AND g.id=line.bnumber
+MERGE (p)-[:requires]->(g)
+" %>% cq
+
+'MATCH (:Pathway)-[r:requires]->(:Gene) RETURN count(r)' %>% cq %>% unlist
+```
+
+
+```{r}
+ref_sets_tu %>%
+  select(id) %>%
+  unique() %>%
+  write_csv("neo4j.import/tu.sets.csv")
+
+"MATCH (:Tu)-[r:harbors]->(:Gene) DELETE r" %>% cq
+
+"
+LOAD CSV WITH HEADERS FROM 'file:///tu.sets.csv' AS row
+CREATE (n:TU)
+SET n.id = row.id
+" %>% cq
+
+# 'CREATE INDEX node_tu_id FOR (n:TU) ON (n.id)' %>% cq
+
+'MATCH (n:TU) RETURN count(n)' %>% cq %>% unlist
+
+" LOAD CSV WITH HEADERS FROM 'file:///tu.info.csv' AS row
+MATCH (n:TU {id: row.id})
+SET n.name = row.name,
+    n.organism = toInteger('511145'),
+    n.strand = row.strand,
+    n.begin = toInteger(row.begin),
+    n.end = toInteger(row.end);
+" %>% cq 
+
+ref_sets_tu %>%
+  select(id, elements) %>%
+  unnest(cols = c(elements)) %>%
+  rename(TU = id, bnumber = elements) %>%
+  write_csv("neo4j.import/tu.bnum.csv")
+
+"
+LOAD CSV WITH HEADERS FROM 'file:///tu.bnum.csv' AS line
+MATCH (t:TU),(g:Gene)
+WHERE t.id=line.TU AND g.id=line.bnumber
+MERGE (t)-[:harbors]->(g)
+" %>% cq
+
+'MATCH (:TU)-[r:harbors]->(:Gene) RETURN count(r)' %>% cq %>% unlist
+```
+
+```{r}
+"MATCH (:GOTerm)-[r]-() DELETE r" %>% cq
+"MATCH (n:GOTerm) DELETE n" %>% cq
+"
+LOAD CSV WITH HEADERS FROM 'file:///go.nodes.tsv' AS row FIELDTERMINATOR '\t' 
+CREATE (n:GOTerm)
+SET n.id = row.id,
+n.name = row.desc,
+n.desc  = row.def,
+n.namespace = row.namespace
+"  %>% cq
+```
+
+```{r}
+"MATCH (n:GOTerm) RETURN count(n)" %>% cq %>% unlist
+```
+
+```{r}
+"CREATE INDEX node_go_id FOR (n:GOTerm) ON (n.id)" %>% cq
+```
+
+```{r}
+"MATCH (n:GOTerm) RETURN n LIMIT 6" %>% cq %>% cq2tb
+```
+
+```{r}
+"
+LOAD CSV WITH HEADERS FROM 'file:///go.is_a.edges.tsv' AS line FIELDTERMINATOR '\t' 
+MATCH (t1:GOTerm),(t2:GOTerm) 
+WHERE t1.id=line.term1 AND t2.id=line.term2
+WITH t1,t2 
+MERGE (t2)-[r:is_a]->(t1)
+" %>% cq
+```
+
+```{r}
+"MATCH ()-[r:is_a]->() RETURN count(r)" %>% cq %>% unlist
+```
+
+```{r}
+"
+LOAD CSV WITH HEADERS FROM 'file:///go.part_of.edges.tsv' AS line FIELDTERMINATOR '\t' 
+MATCH (t1:GOTerm),(t2:GOTerm) 
+WHERE t1.id=line.term1 AND t2.id=line.term2
+WITH t1,t2 
+MERGE (t2)-[r:part_of]->(t1)
+" %>% cq
+```
+
+```{r}
+"MATCH ()-[r:part_of]->() RETURN count(r)" %>% cq %>% unlist
+```
+
+```{r}
+bnumber_uniprot <- uniprot %>%
+  select(uniprotID = Entry, bnumber = `Gene Names (ordered locus)`) %>%
+  filter(!is.na(bnumber)) %>%
+  mutate(bnumber = str_extract(bnumber, "b\\d+")) %>%
+  distinct()
+
+head(bnumber_uniprot)
+
+```
+
+
+```{r}
+GOTerms <- uniprot %>% 
+  select(uniprotID=Entry, GOTerm=`Gene Ontology IDs`) %>%
+  right_join(bnumber.uniprot, by = join_by(uniprotID)) %>% # right join to remove those without bnumber
+  separate_rows(GOTerm, sep='; ') %>%
+  select(bnumber, GOTerm) %>%
+  arrange(bnumber)
+GOTerms
+```
+```{r}
+GOTerms %>% 
+  write_csv("neo4j.import/uniprot.GOTerm.bnumber.csv")
+```
+
+```{r}
+"
+LOAD CSV WITH HEADERS FROM 'file:///uniprot.GOTerm.bnumber.csv' AS line
+MATCH (t:GOTerm),(g:Gene) 
+WHERE t.id=line.GOTerm AND g.id=line.bnumber
+WITH t,g
+MERGE (t)-[:annotates]->(g)
+" %>% cq
+```
+
+```{r}
+"MATCH ()-[r:annotates]->() RETURN count(r)" %>% cq %>% unlist
+```
+
+```{r}
+"
+LOAD CSV WITH HEADERS FROM 'file:///alias.nodes.csv' AS row
+CREATE (a:Alias)
+SET a.id = row.id,
+    a.dbsource = row.dbsource,
+    a.organism = toInteger(row.organism)
+" %>% cq
+```
+
+```{r}
+"CREATE INDEX alias_id_index IF NOT EXISTS
+FOR (a:Alias) ON (a.id)" %>% cq
+```
+
+```{r}
+"
+CREATE INDEX gene_id_index IF NOT EXISTS
+FOR (g:Gene) ON (g.id)
+" %>% cq
+```
+
+
+```{r}
+"
+LOAD CSV WITH HEADERS FROM 'file:///alias.bnum.csv' AS row
+MATCH (a:Alias {id: row.id})
+MATCH (g:Gene {id: row.bnumber})
+MERGE (a)-[:refers_to]->(g)
+" %>% cq
+```
+
+
+```{r}
+set1 <- read_tsv("tmp/set.01.go.tsv", col_names=F)
+set1 <- set1[-1,]
+```
+
+```{r}
+library(rrvgo)
+```
+
+```{r}
+simBP <- calculateSimMatrix(set1$X1, orgdb="org.EcK12.eg.db", ont="BP", method="Rel")
+```
+```{r}
+# simBP
+str(simBP)
+```
+
+```{r}
+scores <- setNames(-log10(as.numeric(set1$X6)), set1$X1)
+scores
+```
+```{r}
+length(as.numeric(set1$X6))
+```
+
+```{r}
+reducedTerms <- reduceSimMatrix(simBP, scores, threshold=.7, orgdb="org.EcK12.eg.db")
+```
+
+```{r}
+# heatmapPlot(simBP, reducedTerms, annotateParent=T, annotationLabel="parentTerm", fontsize=6)
+# heatmapPlot(simBP, reducedTerms, annotateParent=T, annotationLabel="parentTerm", fontsize=12)
+heatmapPlot(simBP, reducedTerms, annotateParent=T, annotationLabel="parentTerm", fontsize=9)
+```
+
+```{r}
+scatterPlot(simBP, reducedTerms)
+```
+```{r}
+treemapPlot(reducedTerms)
+```
+
+```{r}
+wordcloudPlot(reducedTerms, min.freq=1)
+```
+
+```{r}
+set1_bis <- read_tsv("tmp/set.01.go_no_adjus.tsv", col_names=F)
+set1_bis<- set1[-1,]
+```
+
+```{r}
+keyword.mat <- keywords %>% 
+  unique %>% 
+  mutate(asso=1)
+keyword.mat 
+```
+```{r}
+keyword.tab <- keyword.mat %>% 
+  pivot_wider(names_from = keyword, values_from = asso, values_fill = 0) %>% 
+  as.data.frame
+keyword.tab %>% head
+```
+
+```{r}
+rownames(keyword.tab) <- keyword.tab$bnumber
+keyword.tab %>% head
+```
+
+```{r}
+keyword.tab <- keyword.tab %>%
+  dplyr::select(-bnumber)
+keyword.dist <- keyword.tab %>%
+  dist(method='binary')
+keyword.dist[1:10]
+```
+
+```{r}
+keyword.scores <- round( (1-keyword.dist) * 1000) %>%
+  as.matrix
+keyword.scores[1:10,1:10]
+```
+
+```{r}
+library(STRINGdb)
+```
+
+```{r}
+# mise en forme des tableaux:
+library(kableExtra) # nicer tables
+```
+
+```{r}
+kabex <- function(o) o %>% kable(format="html", escape=F) %>% kable_styling(bootstrap_options = c("striped"))
+library(DT) 
+dted <- function(o) o %>% datatable(rownames=F, filter="top", options=list(pageLength = 10), escape=F)
+```
+
+```{r}
+confidence_threshold <- 333
+stringdb <- STRINGdb$new(version='12', species=511145, score_threshold=confidence_threshold, input_directory='downloads')
+```
+
+```{r}
+proteins <- stringdb$get_proteins() %>% 
+  as_tibble
+proteins %>% dted
+```
+
+```{r}
+s14 <- scan('set.M2.14.txt', character()) 
+s14
+```
+
+```{r}
+s14.mapped <- stringdb$mp(s14)
+s14.mapped
+```
+
+```{r}
+stringdb$plot_network(s14.mapped)
+```
+
+```{r}
+enrichment <- stringdb$get_enrichment(s14.mapped)
+enrichment %>% dted
+```
+```{r}
+stringdb$get_neighbors(s14.mapped[1:3])
+```
+
+```{r}
+stringdb$get_interactions(s14.mapped)
+```
+
+```{r}
+links.detailed <- read_delim("downloads/511145.protein.links.detailed.v12.0.txt.gz", delim=" ", col_types = "ccnnnnnnnn")
+links.detailed
+```
+C’est la colonne coexpression qui nous intéresse pour commencer.
+
+Génération des fichiers CSV pour l’import
+```{r}
+links.detailed %>%
+  filter(coexpression>0 & protein1 < protein2) %>%
+  select(protein1, protein2, coexpression) %>%
+  mutate(organism=str_extract(protein1, '^\\d+'), id1=str_extract(protein1, 'b\\d+'), id2=str_extract(protein2, 'b\\d+')) %>%
+  select(organism:id2,coexpression) %>%
+  write_csv("neo4j.import/string.coexpression.csv")
+```
+
+```{r}
+"MATCH ()-[r:STRINGdb]-() DELETE r" %>% cq
+```
+
+Import dans neo4j
+```{r}
+'
+LOAD CSV WITH HEADERS FROM "file:///string.coexpression.csv" AS line
+MATCH (g1:Gene),(g2:Gene)
+ WHERE g1.id=line.id1 AND g2.id=line.id2
+WITH g1,g2, toInteger(line.coexpression) AS value 
+MERGE (g1)-[r:STRINGdb]->(g2)
+ SET r.coexpression=value
+'  %>% cq
+```
+
+Vérification
+```{r}
+'MATCH ()-[r:STRINGdb]->() RETURN count(r)' %>% cq %>% unlist
+```
+Extraction des liens de coexpression d’au moins une certaine valeur/confiance :
+```{r}
+coex <- "MATCH (g1:Gene)-[r:STRINGdb]->(g2:Gene) WHERE r.coexpression>=995 RETURN g1.id, g2.id, r.coexpression" %>% cq 
+tibble(id1=coex$g1.id, id2=coex$g2.id, coexpression=coex$r.coexpression)
+```
+Extraction d’un sous-graphe : on utilise ici neo2r et la fonction fournie avec le paramètre result="graph" afin de récupérer un sous-graphe.
+```{r}
+g.coexpr <- 'MATCH p = ()-[r:STRINGdb]-() WHERE r.coexpression>=995 RETURN p'  %>% cq(result="graph")
+```
+
+Manipulation pour igraph pour récupérer les propriétés des sommets sous forme de tibble :
+```{r}
+g.coexpr$nodes <-  g.coexpr$nodes |> 
+  map(\(node) c(neo_id=node$id, node$properties)) %>% 
+  bind_rows()
+g.coexpr$nodes %>% 
+  dted
+```
+De même pour les arcs/arêtes du graphe à l’aide de la fonction unnest_relationships pour le passage dans igraph : besoin de réordonner les liens :
+```{r}
+g.coexpr$relationships <- g.coexpr$relationships |> 
+  map(\(edge) c(startNode=edge$startNode, endNode=edge$endNode, type=edge$type, edge$properties)) %>% 
+  bind_rows
+
+g.coexpr$relationships %>% 
+  dted
+```
+
+Chargement de la librairies et positionnement des valeurs par défaut pour certains paramètres :
+```{r}
+library(igraph)
+```
+```{r}
+igraph.options(vertex.color=NA)
+```
+
+```{r}
+igraph.options(vertex.label.cex=.6) # font size
+igraph.options(vertex.label.family='sans')
+igraph.options(vertex.size=2)
+igraph.options(edge.label.cex=.6)
+igraph.options(edge.label.family='sans')
+```
+
+Création du graphe dans igraph à partir des sommets et des relations (remarque : la première colonne du df passé comme vertices est considérée comme l’identifiant des sommes, donc neo_id ici) :
+```{r}
+g.coexpr <- graph_from_data_frame(d=g.coexpr$relationships, directed=FALSE, vertices = g.coexpr$nodes)
+g.coexpr
+```
+
+```{r}
+plot(g.coexpr, vertex.label=NA, main='coexpression')
+```
+#2.4
+```{r}
+export_string_links <- function(df, score_col, output_name) {
+  df %>%
+    filter(!!sym(score_col) > 0 & protein1 < protein2) %>%
+    mutate(
+      organism = str_extract(protein1, '^\\d+'),
+      id1 = str_extract(protein1, 'b\\d+'),
+      id2 = str_extract(protein2, 'b\\d+')
+    ) %>%
+    select(organism, id1, id2, !!sym(score_col)) %>%
+    write_csv(paste0("neo4j.import/", output_name))
+}
+
+#export_string_links(links.detailed, "coexpression", "string.coexpression.csv")
+export_string_links(links.detailed, "experimental", "string.experimental.csv")
+export_string_links(links.detailed, "neighborhood", "string.neighborhood.csv")
+export_string_links(links.detailed, "textmining", "string.textmining.csv")
+export_string_links(links.detailed, "database", "string.database.csv")
+export_string_links(links.detailed, "combined_score", "string.combined.csv")
+```
+
+
+
+```{r}
+'
+LOAD CSV WITH HEADERS FROM "file:///string.experimental.csv" AS line
+MATCH (g1:Gene), (g2:Gene)
+ WHERE g1.id=line.id1 AND g2.id=line.id2
+WITH g1,g2, toInteger(line.experimental) AS value
+MERGE (g1)-[r:STRINGdb]->(g2)
+SET r.experimental = value
+' %>% cq
+```
+
+```{r}
+'MATCH ()-[r:STRINGdb]->() RETURN count(r)' %>% cq %>% unlist
+```
+
+```{r}
+'
+LOAD CSV WITH HEADERS FROM "file:///string.neighborhood.csv" AS line
+MATCH (g1:Gene), (g2:Gene)
+ WHERE g1.id=line.id1 AND g2.id=line.id2
+WITH g1,g2, toInteger(line.neighborhood) AS value
+MERGE (g1)-[r:STRINGdb]->(g2)
+SET r.neighborhood = value
+' %>% cq
+```
+
+```{r}
+'
+LOAD CSV WITH HEADERS FROM "file:///string.textmining.csv" AS line
+MATCH (g1:Gene), (g2:Gene)
+ WHERE g1.id=line.id1 AND g2.id=line.id2
+WITH g1,g2, toInteger(line.textmining) AS value
+MERGE (g1)-[r:STRINGdb]->(g2)
+SET r.textmining = value
+' %>% cq
+```
+
+
+```{r}
+'
+LOAD CSV WITH HEADERS FROM "file:///string.database.csv" AS line
+MATCH (g1:Gene), (g2:Gene)
+ WHERE g1.id=line.id1 AND g2.id=line.id2
+WITH g1,g2, toInteger(line.database) AS value
+MERGE (g1)-[r:STRINGdb]->(g2)
+SET r.database = value
+' %>% cq
+```
+
+```{r}
+'MATCH ()-[r:STRINGdb]->() RETURN count(r)' %>% cq %>% unlist
+```
+
+```{r}
+'
+LOAD CSV WITH HEADERS FROM "file:///string.combined.csv" AS line
+MATCH (g1:Gene), (g2:Gene)
+ WHERE g1.id=line.id1 AND g2.id=line.id2
+WITH g1,g2, toInteger(line.combined_score) AS value
+MERGE (g1)-[r:STRINGdb]->(g2)
+SET r.combined_score = value
+' %>% cq
+```
+
+```{r}
+'MATCH ()-[r:STRINGdb]->() RETURN count(r)' %>% cq %>% unlist
+```
+
+#2.5
+```{r}
+g.full <- 'MATCH p = ()-[r:STRINGdb]-() WHERE r.coexpression>=995 RETURN p'  %>% cq(result="graph")
+
+g.full$nodes <-  g.coexpr$nodes |> 
+  map(\(node) c(neo_id=node$id, node$properties)) %>% 
+  bind_rows()
+
+g.f$relationships <- g.full$relationships |> 
+  map(\(edge) c(startNode=edge$startNode, endNode=edge$endNode, type=edge$type, edge$properties)) %>% bind_rows
+
+g <- graph_from_data_frame(d=g.full$relationships, directed=FALSE, vertices=g.full$nodes)
+
+```
+
+```{r}
+g= graph_from_data_frame(d=links.detailed, directed=FALSE)
+```
+
+
+```{r}
+prior <- 0.041
+no_prior <- function(x, prior = 0.041) (ifelse(is.na(x), 0, x) / 1000 - prior) / (1-prior)
+s_coexp_nop <- no_prior(E(g)$coexpression)
+#s_ppi_nop <- no_prior(E(g)$ppi)
+s_neighborhood_nop <- no_prior(E(g)$neighborhood)
+s_tot_nop <- 1 - (1 - s_coexp_nop) * (1 - s_ppi_nop) * (1 - s_neighborhood_nop)
+E(g)$combined_score <- round(1000 * (s_tot_nop + prior *(1 - s_tot_nop)))
+```
+
+
+# 2.6 Prioritisation de genes
+Gènes “training”. Choix du cycle des citrates (pathway TCA). Récupération des gènes impliqués dans le pathway
+```{r}
+training.genes <- "MATCH (Pathway {id: 'TCA'})-[:requires]->(g: Gene {organism: 511145}) return g.id " %>% 
+  cq  %>% 
+  .$g %>% 
+  unlist
+training.genes
+```
+
+Gènes “candidats” (ensemble du génome) :
+```{r}
+candidates <- "MATCH (g:Gene {organism: 511145}) RETURN g.id" %>% cq %>% .$g 
+candidates %>% head(100)
+```
+
+Distance d’un gène à l’ensemble de référence
+```{r}
+score <- function(gene.ids, ref.genes, datasource) {
+  ref_str <- paste("'", ref.genes,"'", sep = '', collapse = ',')
+  sapply(gene.ids, function(gene.id) {
+    query <- paste0("MATCH (g1:Gene {id: '", gene.id, "', organism: 511145})-[r:STRINGdb]-(g2:Gene {organism: 511145}) WHERE g2.id IN [",ref_str,"] RETURN r.",datasource)
+    res <- query %>% cq %>% .$r
+    ifelse(is.null(res), 0, mean(replace_na(res, 0)))
+  })
+}
+# test
+gene.ids <- 'b0001'
+gene.ids <- 'b0116'
+ref.genes <- training.genes
+datasource <- 'coexpression'
+score(gene.ids, training.genes, datasource)
+```
+
+Application à l’ensemble des gènes
+```{r}
+scores <- tibble(candidate=candidates) %>%
+  mutate(
+    coexpression = score(gene.id=candidate, ref.genes=training.genes, datasource='coexpression'),
+    experimental  = score(gene.id=candidate, ref.genes=training.genes, datasource='experimental'),
+    neighborhood  = score(gene.id=candidate, ref.genes=training.genes, datasource='neighborhood'),
+    textmining  = score(gene.id=candidate, ref.genes=training.genes, datasource='textmining'),
+    database  = score(gene.id=candidate, ref.genes=training.genes, datasource='database')
+         )
+scores <- scores  %>%  replace(is.na(.), 0)
+scores
+```
+
+
+```{r}
+scores %>%
+  ggplot(aes(x=coexpression, y=neighborhood)) +
+  geom_point(alpha=0.2, aes(color=candidate %in% training.genes, shape=candidate %in% training.genes))
+```
+
+ACP pour l’affichage
+```{r}
+pca = scores %>%
+  dplyr::select(-candidate) %>%
+  prcomp
+pca %>% summary
+```
+
+
+Visualisation
+```{r}
+library(factoextra)
+```
+
+```{r}
+pca %>% fviz_pca_ind(col.ind = scores$candidate %in% training.genes, addEllipses = T, alpha.ind = .2, geom='point')
+```
+
+On peut déjà observer une petite distinction entre les gènes de référence et les autres.
+
+Contribution des sources de données
+
+```{r}
+pca %>% fviz_pca_biplot(col.ind = scores$candidate %in% training.genes)
+```
+
+Analyse discriminante linéaire
+
+```{r}
+library(MASS)
+```
+
+```{r}
+mat <- scores %>% dplyr::select(-candidate) %>% as.matrix
+model <- lda(x=mat, grouping = scores$candidate %in% training.genes)
+model
+```
+
+```{r}
+mat %>% 
+  scale( center=T, scale=F ) %*% model$scaling %>% 
+  as_tibble %>%
+  mutate(gene.id=scores$candidate) %>%
+  ggplot(aes(x=LD1, y=gene.id %in% training.genes, color=gene.id %in% training.genes, shape=gene.id %in% training.genes)) +
+  geom_violin() +
+  geom_boxplot(varwidth = T) +
+  geom_jitter(height = 0.2, alpha=0.1, color='grey') +
+  theme_light()
+```
+
+
+```{r}
+mat %>% 
+  scale( center=T, scale=F ) %*% model$scaling %>% 
+  as_tibble %>%
+  mutate(gene.id=scores$candidate) %>%
+  ggplot(aes(LD1)) + #, color=gene.id %in% training.genes, shape=gene.id %in% training.genes)) +
+  geom_density() 
+```
+
+```{r}
+train.str <- paste("'", training.genes,"'", sep = '', collapse = ',')
+datasources <- c('coexpression', 'experimental', 'neighborhood', 'textmining', 'database' )
+ds.str <- paste(" r.", datasources, sep='', collapse=',')
+tb <- paste0("MATCH (candidate:Gene {organism: 511145})-[r:STRINGdb]-(training:Gene {organism: 511145}) WHERE training.id IN [", train.str,"]  RETURN DISTINCT candidate.id, training.id, ", ds.str) %>% cq
+tb
+```
+
+```{r}
+scores <- tb %>% 
+  dplyr::select(-training.id) %>%
+  replace(is.na(.), 0) %>%
+  pivot_longer(cols = paste0('r.',datasources), names_to='datasource') %>%
+  group_by(candidate.id, datasource) %>%
+  summarise(score=mean(value), .groups="drop") %>%
+  pivot_wider(names_from = datasource, values_from = score) %>% 
+  ungroup
+scores
+```
+
+
+Analyse discriminante linéaire
+```{r}
+mat <- scores %>% dplyr::select(-candidate.id) %>% as.matrix
+model <- lda(x=mat, grouping = scores$candidate.id %in% training.genes)
+model
+```
+
+Distribution des scores sous forme de boîtes à moustache pour les 2 classes :
+
+```{r}
+mat %>% 
+  scale( center=T, scale=F ) %*% model$scaling %>% 
+  as_tibble %>%
+  mutate(gene.id=scores$candidate.id, training=gene.id %in% training.genes) %>%
+  ggplot(aes(x=LD1, y=training,  color=training, shape=training)) +
+  geom_violin() +
+  geom_jitter(alpha=.5, height = .2)
+```
+
+# Statistiques globales
+
+```{r}
+# Nombre de gènes
+"MATCH (g:Gene) RETURN count(g)" %>% cq %>% unlist()
+
+# Nombre d’alias
+"MATCH (a:Alias) RETURN count(a)" %>% cq %>% unlist()
+
+# Nombre de GO terms
+"MATCH (go:GOTerm) RETURN count(go)" %>% cq %>% unlist()
+
+# Nombre de Keywords
+"MATCH (k:Keyword) RETURN count(k)" %>% cq %>% unlist()
+
+# Nombre de références PubMed
+"MATCH (p:PubMed) RETURN count(p)" %>% cq %>% unlist()
+
+# Nombre de Pathways
+"MATCH (pw:Pathway) RETURN count(pw)" %>% cq %>% unlist()
+
+# Nombre de Transcription Units (TU)
+"MATCH (tu:TU) RETURN count(tu)" %>% cq %>% unlist()
+
+# Nombre de interpro
+"MATCH (inter:InterPro) RETURN count(inter)" %>% cq %>% unlist()
+
+```
+
+# Nombre d’arêtes par type de relation
+
+```{r}
+# Relations GO – Gene
+"MATCH (:Gene)<-[rGo:annotates]-(:GOTerm) RETURN count(rGo)" %>% cq %>% unlist()
+
+# Relations GO – Go
+"MATCH ()-[rGGi:is_a]->() RETURN count(rGGi)" %>% cq %>% unlist
+
+# Relations GO – Go
+"MATCH ()-[rGGp:part_of]->() RETURN count(rGGp)" %>% cq %>% unlist
+
+# Relations Keyword – Gene
+"MATCH (:Gene)<-[rKd:describes]-(:Keyword) RETURN count(rKd)" %>% cq %>% unlist()
+
+# Relations Alias – Gene
+"MATCH (:Gene)<-[rA:refers_to]-(:Alias) RETURN count(rA)" %>% cq %>% unlist()
+
+# Relations Pathway – Gene
+"MATCH (:Gene)<-[rPw:requires]-(:Pathway) RETURN count(rPw)" %>% cq %>% unlist()
+
+# Relations TU – Gene
+"MATCH (:Gene)<-[rTU:harbors]-(:TU) RETURN count(rTU)" %>% cq %>% unlist()
+
+# Relations InterPro – Gene
+"MATCH (:Gene)<-[rInt:encoded_in]-(:InterPro) RETURN count(rInt)" %>% cq %>% unlist()
+
+# Relations PubMed – Gene
+"MATCH (:Gene)<-[rPd:cites]-(:PubMed) RETURN count(rPd)" %>% cq %>% unlist()
+
+# Relations StringDB (Gene – Gene)
+"MATCH (:Gene)-[rG:STRINGdb]->(:Gene) RETURN count(rG)" %>% cq %>% unlist()
+
+
+```
+
+# Graphiques descriptifs
+
+```{r}
+# Récupérer le nombre d’alias par gène
+df_alias <- "
+    MATCH (g:Gene)<-[:refers_to]-(a:Alias)
+    RETURN g.bnumber AS gene, count(a) AS n_alias
+" %>% cq %>% as.data.frame()
+
+# Histogramme
+library(ggplot2)
+
+p <- ggplot(df_alias, aes(x = n_alias)) +
+  geom_histogram(binwidth = 1, fill="steelblue") +
+  theme_minimal() +
+  labs(
+    title = "Distribution du nombre d'alias par gène",
+    x = "Nombre d'alias",
+    y = "Nombre de gènes"
+  )
+print(p)
+# Sauvegarde en PNG
+ggsave("distribution_alias_genes.png", plot = p, width = 8, height = 6, dpi = 300)
+```
+
+```{r}
+# Nombre de GO par gène
+df_go <- "
+    MATCH (g:Gene)<-[:annotates]-(go:GOTerm)
+    RETURN g.bnumber AS gene, count(go) AS n_go
+" %>% cq %>% as.data.frame()
+
+p1 <- ggplot(df_go, aes(x = n_go)) +
+  geom_histogram(binwidth = 1, fill="darkorange") +
+  theme_minimal() +
+  labs(
+    title = "Distribution du nombre de GO terms par gène",
+    x = "Nombre de GO terms",
+    y = "Nombre de gènes"
+  )
+print(p1)
+# Sauvegarde en PNG
+ggsave("distribution_GOterms_genes.png", plot = p1, width = 8, height = 6, dpi = 300)
+```
+
+
+```{r}
+# Nombre de gènes par pathway
+df_pw <- "
+    MATCH (pw:Pathway)-[:requires]->(g:Gene)
+    RETURN pw.id AS pathway, count(g) AS n_genes
+" %>% cq %>% as.data.frame()
+
+p2 <- ggplot(df_pw, aes(x = n_genes)) +
+  geom_histogram(binwidth = 1, fill="seagreen") +
+  theme_minimal() +
+  labs(
+    title = "Distribution de la taille des pathways",
+    x = "Nombre de gènes par pathway",
+    y = "Nombre de pathways"
+  )
+print(p2)
+# Sauvegarde en PNG
+ggsave("distribution_Pathways_genes.png", plot = p2, width = 8, height = 6, dpi = 300)
+```
+```{r}
+df_tu <- "
+    MATCH (tu:TU)-[:harbors]->(g:Gene)
+    RETURN tu.id AS TU, count(g) AS n_genes
+" %>% cq %>% as.data.frame()
+
+p3 <- ggplot(df_tu, aes(x = n_genes)) +
+  geom_histogram(binwidth = 1, fill="purple") +
+  theme_minimal() +
+  labs(
+    title = "Distribution de la taille des unités transcriptionnelles",
+    x = "Nombre de gènes par TU",
+    y = "Nombre de TU"
+  )
+print(p3)
+# Sauvegarde en PNG
+ggsave("distribution_TU_genes.png", plot = p3, width = 8, height = 6, dpi = 300)
+```
+
+
