@@ -1,8 +1,0 @@
-id	desc	common.n	target.n	p-value	genes	p-adjust
-PWY0-1578	hydrogen to trimethylamine N-oxide electron transfer	3	6	0.0004767454173151875	b0997, b2997, b2996	0.010965144598249313
-PWY0-1577	hydrogen to dimethyl sulfoxide electron transfer	3	7	0.0008162489035087472	b0894, b2997, b2996	0.009386862390350593
-PWY0-1355	formate to trimethylamine <i>N</i>-oxide electron transfer	3	8	0.0012777720374657726	b1474, b0997, b3894	0.00979625228723759
-PWY0-1356	formate to dimethyl sulfoxide electron transfer	3	9	0.0018752892271363532	b0894, b3894, b1474	0.010782913056034031
-PWY0-1585	formate to nitrite electron transfer	3	9	0.0018752892271363532	b1474, b4072, b3894	0.008626330444827225
-PWY0-1584	<i>sn</i>-glycerol 3-phosphate anaerobic respiration	2	5	0.008222454583805291	b2206, b2205	0.031519409237920286
-
