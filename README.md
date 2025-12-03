@@ -2,7 +2,7 @@
 
 ## Présentation du projet
 
-Ce projet réalise une **analyse d’enrichissement fonctionnel** d’un ensemble de gènes bactériens à l’aide de plusieurs systèmes d’annotation :
+Ce projet réalise une analyse d’enrichissement fonctionnel d’un ensemble de gènes bactériens à l’aide de plusieurs systèmes d’annotation :
 
 - **GO Terms (Gene Ontology)**
 - **Domaines InterPro**
