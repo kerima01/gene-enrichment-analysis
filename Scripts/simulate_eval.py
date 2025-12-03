@@ -3,6 +3,8 @@
 """
 simulate_eval.py
 Expérimentations : comparaison des mesures (binomial, hypergeometric, chi2, coverage)
+
+@author: kerima issa
 """
 
 import random
