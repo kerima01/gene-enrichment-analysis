@@ -1,0 +1,147 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Charger le fichier
+goterms <- read.table("results_GO.tsv", header=TRUE, sep="\t", stringsAsFactors=FALSE)
+
+# Prendre les 15 termes les plus significatifs
+top_goterms <- goterms %>%
+  arrange(p.adjust) %>%
+  head(10) %>%
+  mutate(desc = factor(desc, levels=rev(desc)))  # pour inverser l'ordre dans le plot
+
+# Barplot
+pp3 <- ggplot(top_goterms, aes(x=desc, y=-log10(p.adjust))) +
+  geom_col(fill="steelblue") +
+  coord_flip() +  # barres horizontales pour lisibilité
+  theme_minimal() +
+  labs(
+    title="Enrichissements GO terms pour l'ensemble de gènes fourni",
+    x="GO term",
+    y="-log10(p-adjust)"
+  )
+
+print(pp3)
+# Sauvegarde en PNG
+ggsave("Enrichement_GO.png", plot = pp3, width = 10, height = 6, dpi = 300)
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Charger le fichier
+interpro <- read.table("results_InterPro.tsv", header=TRUE, sep="\t", stringsAsFactors=FALSE)
+
+# Prendre les 15 domaines les plus significatifs
+top_interpro <- interpro %>%
+  arrange(p.adjust) %>%
+  head(10) %>%
+  mutate(desc = factor(desc, levels=rev(desc)))  # inverser l'ordre pour le plot horizontal
+
+# Barplot
+pp2 <- ggplot(top_interpro, aes(x=desc, y=-log10(p.adjust))) +
+  geom_col(fill="darkorange") +
+  coord_flip() +
+  theme_minimal() +
+  labs(
+    title="Enrichissements InterPro pour l'ensemble de gènes fourni",
+    x="Domaine InterPro",
+    y="-log10(p-adjust)"
+  )
+print(pp2)
+# Sauvegarde en PNG
+ggsave("Enrichement_InterPro.png", plot = pp2, width = 10, height = 6, dpi = 300)
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Charger le fichier
+keyword <- read.table("results_Keyword.tsv", header=TRUE, sep="\t", stringsAsFactors=FALSE)
+
+# Sélectionner les 15 termes les plus significatifs
+top_keyword <- keyword %>%
+  arrange(p.adjust) %>%
+  head(10) %>%
+  mutate(desc = factor(desc, levels=rev(desc)))  # inverser l'ordre
+
+# Barplot
+pp1 <- ggplot(top_keyword, aes(x=desc, y=-log10(p.adjust))) +
+  geom_col(fill="steelblue") +
+  coord_flip() +
+  theme_minimal() +
+  labs(
+    title="Enrichissements Keyword pour l'ensemble de gènes fourni",
+    x="Keyword",
+    y="-log10(p-adjust)"
+  )
+
+print(pp1)
+# Sauvegarde en PNG
+ggsave("Enrichement_Keyword.png", plot = pp1, width = 8, height = 6, dpi = 300)
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Charger le fichier
+pathway <- read.table("results_Pathway.tsv", header=TRUE, sep="\t", stringsAsFactors=FALSE)
+
+# Top pathways par p-adjust
+top_pathway <- pathway %>%
+  arrange(p.adjust) %>%
+  head(6) %>%
+  mutate(desc = factor(desc, levels=rev(desc)))
+
+# Barplot
+pp4 <- ggplot(top_pathway, aes(x=desc, y=-log10(p.adjust))) +
+  geom_col(fill="darkgreen") +
+  coord_flip() +
+  theme_minimal() +
+  labs(
+    title="Enrichissements Pathway pour l'ensemble de gènes fourni",
+    x="Pathway",
+    y="-log10(p-adjust)"
+  )
+print(pp4)
+# Sauvegarde en PNG
+ggsave("Enrichement_Pathway.png", plot = pp4, width = 10, height = 7, dpi = 300)
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Charger le fichier
+tu <- read.table("results_TU.tsv", header=TRUE, sep="\t", stringsAsFactors=FALSE)
+
+# Top TU
+top_tu <- tu %>%
+  arrange(p.adjust) %>%
+  head(10) %>%
+  mutate(id = factor(id, levels=rev(id)))
+
+# Barplot
+pp5 <- ggplot(top_tu, aes(x=id, y=-log10(p.adjust))) +
+  geom_col(fill="steelblue") +
+  coord_flip() +
+  theme_minimal() +
+  labs(
+    title="Top Transcription Units enrichies",
+    x="TU",
+    y="-log10(p-adjust)"
+  )
+print(pp5)
+# Sauvegarde en PNG
+ggsave("Enrichement_TU.png", plot = pp5, width = 8, height = 6, dpi = 300)
+```
+
