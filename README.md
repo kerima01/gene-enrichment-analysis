@@ -20,21 +20,25 @@ Les gènes de l’ensemble sont fortement enrichis pour des fonctions liées à 
 #### 1.2 InterPro
 Enrichissement marqué pour la **voie de translocation Twin-arginine**, les domaines **molybdopterin oxidoreductase** et les sous-unités **[NiFe]-hydrogenase**. Les protéines ribosomales sont également sur-représentées, soulignant la combinaison traductionnelle et métabolique spécialisée, notamment la respiration anaérobie.  
 
+![Enrichement_InterPro](Enrichement_InterPro.png)
 **Figure 8** : Enrichissements des domaines protéiques InterPro
 
 #### 1.3 Keyword
 Les mots-clés enrichis incluent **Ribosomal protein**, **RNA-binding**, **tRNA-binding**, ainsi que **Molybdenum**, **4Fe-4S**, **Oxidoreductase**. Cette combinaison montre un ensemble de gènes centré sur la traduction mais incluant un sous-ensemble impliqué dans le métabolisme énergétique et la respiration anaérobie.  
 
+![Enrichement_Keyword](Enrichement_Keyword.png)
 **Figure 9** : Enrichissements des mots-clés fonctionnels
 
 #### 1.4 Pathway
 Les voies enrichies concernent des transferts d’électrons spécifiques : hydrogène → triméthylamine N-oxyde / diméthylsulfoxyde, formate → ces accepteurs / nitrite, respiration anaérobie du sn-glycérol 3-phosphate.  
 
+![Enrichement_Pathway](Enrichement_Pathway.png)
 **Figure 10** : Enrichissements des voies métaboliques (Pathway)
 
 #### 1.5 Transcription Units (TU)
 Plusieurs TU regroupent des gènes ribosomaux (TU00337, TU00347), tandis que d’autres contiennent des gènes liés à la respiration anaérobie et au transport Tat. Cela indique une régulation transcriptionnelle coordonnée.  
 
+![Enrichement_TU](Enrichement_TU.png)
 **Figure 11** : Enrichissements des unités de transcription (TU)
 
 **Discussion :** L’ensemble `set.M2.14.txt` présente un profil centré sur la traduction, avec un sous-ensemble spécialisé dans la respiration anaérobie. Les analyses GOTerm et Keyword mettent en évidence la machinerie de traduction, InterPro et Pathway identifient les modules métaboliques spécialisés, et les TU illustrent la régulation coordonnée.
