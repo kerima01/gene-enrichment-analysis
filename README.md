@@ -81,4 +81,4 @@ Les publications enrichies portent sur la **division cellulaire bactérienne**, 
 - **`set.M2.14.txt`** : profil traductionnel + métabolisme anaérobie.  
 - **`set.02.txt`** : profil division cellulaire + biosynthèse peptidoglycane.  
 
-Ces deux ensembles illustrent comment les analyses fonctionnelles permettent de **découvrir des modules biologiques cohérents** et de relier les gènes à des fonctions et voies spécifiques dans le génome bactérien.
+Ces deux ensembles illustrent comment les analyses fonctionnelles permettent de découvrir des modules biologiques cohérents et de relier les gènes à des fonctions et voies spécifiques dans le génome bactérien.
