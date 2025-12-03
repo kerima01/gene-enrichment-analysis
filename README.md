@@ -1,4 +1,4 @@
-# Analyse d’Enrichissement Fonctionnel – Gene Enrichment Analysis
+# Analyse d’Enrichissement Fonctionnel : Gene Enrichment Analysis
 
 ##  Présentation du projet
 
