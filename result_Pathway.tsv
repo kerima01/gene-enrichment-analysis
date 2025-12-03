@@ -1,8 +1,0 @@
-id	desc	common.n	target.n	p-value	genes	p-adjust
-PEPTIDOGLYCANSYN-PWY	peptidoglycan biosynthesis I (<I>meso</I>-diaminopimelate containing)	18	18	1.1037302924145746e-30	b3396, b0634, b0149, b0089, b0090, b0086, b0085, b3208, b0088, b0381, b0087, b0091, b3967, b3972, b0092, b3189, b1069, b2519	1.214103321656032e-29
-PWY0-1586	peptidoglycan maturation (<i>meso</i>-diaminopimelate containing)	15	19	4.961010950918702e-22	b3396, b0634, b0925, b0149, b0089, b2010, b0376, b0839, b3208, b3182, b0084, b0632, b0635, b1678, b2519	2.7285560230052863e-21
-PWY-6387	UDP-<i>N</i>-acetylmuramoyl-pentapeptide biosynthesis I (<i>meso</i>-diaminopimelate containing)	9	9	1.606041174497623e-15	b0086, b0085, b0088, b0381, b0091, b3967, b3972, b0092, b3189	5.888817639824617e-15
-PWY0-1261	peptidoglycan recycling I	6	20	4.443911765994894e-06	b4233, b3730, b3972, b1107, b3189, b1192	1.2220757356485958e-05
-PWY-5785	di-<i>trans</i>,poly-<i>cis</i>-undecaprenyl phosphate biosynthesis	3	4	5.0338153982517565e-05	b0174, b0841, b3057	0.00011074393876153864
-POLYISOPRENSYN-PWY	polyisoprenoid biosynthesis (<i>E. coli</i>)	3	6	0.0002431159731265086	b0174, b0841, b3057	0.00044571261739859906
-
