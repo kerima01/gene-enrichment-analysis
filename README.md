@@ -7,9 +7,6 @@ L’objectif est de caractériser chaque ensemble et de comprendre leurs rôles 
 
 ---
 
-
----
-
 # Analyse de l’ensemble de gènes fourni
 
 ### A. Ensemble `set.M2.14.txt`
